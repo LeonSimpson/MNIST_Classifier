@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
 from torch import nn
 
+# Custom dataset class
 class MNISTDataset(Dataset):
     def __init__(self, train=True):
         self.data = datasets.MNIST(
@@ -18,6 +19,7 @@ class MNISTDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
 
+# Two fully connected layers, with a ReLU activation
 class MultilayerClassifier(nn.Module):
     def __init__(self, hidden_size=1000):
         super().__init__()
@@ -32,15 +34,16 @@ class MultilayerClassifier(nn.Module):
     
     def save_model(self, file_name): torch.save(self.state_dict(), f"{file_name}.pth")
 
-def train_model(model, train_loader, criterion, optimizer, device):
+# Iterate over dataset, backpropagating loss
+def train_model(model, train_loader, criterion, optimiser, device):
     model.train()
     for images, labels in train_loader:
         images, labels = images.to(device), labels.to(device)
-        optimizer.zero_grad()
+        optimiser.zero_grad()
         outputs = model(images)
         loss = criterion(outputs, labels)
         loss.backward()
-        optimizer.step()
+        optimiser.step()
 
 def test_model(model, test_loader, device):
     model.eval()
@@ -57,6 +60,7 @@ def test_model(model, test_loader, device):
     return accuracy
 
 if __name__ == "__main__":
+    # Constants - change if training is too slow on system
     NUM_EPOCHS = 5
     NUM_CLASSES = 10
     BATCH_SIZE = 100
@@ -69,8 +73,11 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
+    # Uses CUDA if possible
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = MultilayerClassifier(hidden_size=HIDDEN_SIZE).to(device)
+
+    # Cross entropy loss with Adam optimiser
     criterion = nn.CrossEntropyLoss()
     optimiser = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
